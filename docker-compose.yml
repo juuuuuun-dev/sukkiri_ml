@@ -1,0 +1,14 @@
+version: '3.3'
+
+services:
+  
+  python:
+    build:
+      context: ./docker/python
+    container_name: ${APP_PREFIX}.python
+    environment:
+      - ENV_NAME=${ENV_NAME}
+      - DEBUG=${DEBUG}
+    volumes:
+      - ./src/:/app
+    tty: true
