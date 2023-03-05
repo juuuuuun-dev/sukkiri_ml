@@ -1,7 +1,6 @@
 version: '3.3'
 
 services:
-  
   python:
     build:
       context: ./docker/python
@@ -12,3 +11,12 @@ services:
     volumes:
       - ./src/:/app
     tty: true
+  # notebook:
+  #   image: jupyter/datascience-notebook
+  #   ports:
+  #     - '8888:8888'
+  #   environment:
+  #     - JUPYTER_ENABLE_LAB=yes
+  #   volumes:
+  #     - ./src/:/home/jovyan/work
+  #   command: start-notebook.sh --NotebookApp.token='pass'
