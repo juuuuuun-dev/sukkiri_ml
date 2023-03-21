@@ -1,6 +1,9 @@
 import pandas as pd
 from sklearn import tree
+import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
+import pprint
+import pickle
 
 df = pd.read_csv('./sukkiri-ml-codes/datafiles/Survived.csv')
 print(df.head(2))
@@ -99,4 +102,45 @@ def learn(x, t, depth=3):
 for j in range(1, 15):
     s1, s2, m = learn(x, t, depth=j)
     sentence = '深さ{}: 訓練データの精度{}: テストデータの精度{}'
+    # print(sentence.format(j, s1, s2))
+
+sex = df2.groupby('Sex').mean(numeric_only=True)
+# pprint.pprint(vars(nump))
+
+plt.bar(sex.index.to_numpy(), sex['Survived'].to_numpy())
+plt.savefig('./img/chap7-20.png')
+
+col = ['Pclass', 'Age', 'SibSp', 'Parch', 'Fare', 'Sex']
+x = df2[col]
+t = df2['Survived']
+
+# train_score, test_score, model = learn(x, t)
+
+# 特徴量に文字列の値は設定できない
+male = pd.get_dummies(df2['Sex'])
+print(male)
+
+emb = pd.get_dummies(df2['Embarked'], drop_first=False)
+print(emb)
+
+print(x)
+x_temp = pd.concat([x, male], axis=1)
+print(x_temp)
+
+x_new = x_temp.drop('Sex', axis=1)
+
+for j in range(1, 10):
+    s1, s2, m = learn(x_new, t, depth=j)
+    sentence = '深さ{}: 訓練データの精度{}: テストデータの精度{}'
     print(sentence.format(j, s1, s2))
+
+# score85以上が目安なので
+s1, s2, model = learn(x_new, t, depth=5)
+with open('./pkl/survived.pkl', 'wb') as f:
+    pickle.dump(model, f)
+
+# 特徴量重要度の確認
+f = model.feature_importances_
+print(f)
+fp = pd.DataFrame(f, index=x_new.columns)
+print(fp)
