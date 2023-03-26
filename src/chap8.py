@@ -2,6 +2,7 @@ import pandas as pd
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
+from sklearn.preprocessing import StandardScaler
 
 df = pd.read_csv("./sukkiri-ml-codes/datafiles/Boston.csv")
 print(df.head(2))
@@ -55,10 +56,9 @@ col = ["INDUS", "NOX", "RM", "PTRATIO", "LSTAT", "PRICE"]
 train_val4 = train_val3[col]
 print(train_val4.head(3))
 
-# 相関係数
+# 相関係数 正解データのPRICEとの相関係数を表示
 print(train_val4.corr()['PRICE'])
 # ここでは正負(+-)に関係なく相関係数の強さを調べるため絶対値にしてからsort
-
 train_cor = pd.Series(train_val4.corr()['PRICE'])
 abs_cor = train_cor.map(abs)
 print(abs_cor)
@@ -66,3 +66,83 @@ abs_cor = abs_cor.sort_values(ascending=False)
 print(abs_cor)
 
 # 相関係数のチェックは外れ値の削除後に行う
+# PRICEとの相関係数、上位3つを特徴量として使用
+col = ["RM", "LSTAT", "PTRATIO"]
+x = train_val4[col]
+t = train_val4[["PRICE"]]
+
+# 訓練データをさらに訓練データと検証データに分割
+x_train, x_val, y_train, y_val = train_test_split(
+    x, t, test_size=0.2, random_state=0)
+
+print(x_train.mean())
+
+# 各特徴量で平均値が大きく異なる場合は、特徴量を標準化して
+# 各特徴量の平均と標準偏差を統一させることにより性能が上がる場合がある
+sc_model_x = StandardScaler()
+sc_model_x.fit(x_train)
+
+sc_x = sc_model_x.transform(x_train)
+print(sc_x)
+
+tmp_df = pd.DataFrame(sc_x, columns=x_train.columns)
+print(tmp_df.mean())
+print(tmp_df.std())
+
+# 正解データも標準化
+sc_model_y = StandardScaler()
+sc_model_y.fit(y_train)
+sc_y = sc_model_y.transform(y_train)
+
+# モデル作成と学習
+model = LinearRegression()
+model.fit(sc_x, sc_y)
+
+# 検証データも標準化
+sc_x_val = sc_model_x.transform(x_val)
+sc_y_val = sc_model_y.transform(y_val)
+
+print(model.score(sc_x_val, sc_y_val))
+
+
+def learn(x, t):
+    x_train, x_val, y_train, y_val = train_test_split(
+        x, t, test_size=0.2, random_state=0)
+
+    # 訓練データ 標準化
+    sc_model_x = StandardScaler()
+    sc_model_x.fit(x_train)
+    sc_x_train = sc_model_x.transform(x_train)
+
+    sc_model_y = StandardScaler()
+    sc_model_y.fit(y_train)
+    sc_y_train = sc_model_y.transform(y_train)
+
+    # 訓練データ 学習
+    model = LinearRegression()
+    model.fit(sc_x_train, sc_y_train)
+
+    # 検証データ 標準化
+    sc_x_val = sc_model_x.transform(x_val)
+    sc_y_val = sc_model_y.transform(y_val)
+
+    # score
+    train_score = model.score(sc_x_train, sc_y_train)
+    val_score = model.score(sc_x_val, sc_y_val)
+
+    return train_score, val_score
+
+
+x = train_val3.loc[:, ['RM', 'LSTAT', 'PTRATIO']]
+t = train_val3[['PRICE']]
+
+s1, s2 = learn(x, t)
+print(s1, s2)
+
+# 多項式特徴量
+# 回帰分析では
+
+print(x['RM'] ** 2)
+x['RM2'] = x['RM'] ** 2
+
+print(x.head(2))
