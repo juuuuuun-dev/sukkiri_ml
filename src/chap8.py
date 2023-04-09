@@ -130,19 +130,55 @@ def learn(x, t):
     train_score = model.score(sc_x_train, sc_y_train)
     val_score = model.score(sc_x_val, sc_y_val)
 
-    return train_score, val_score
+    return train_score, val_score, model
 
 
-x = train_val3.loc[:, ['RM', 'LSTAT', 'PTRATIO']]
+feature_col = ['RM', 'LSTAT', 'PTRATIO']
+x = train_val3.loc[:, feature_col]
 t = train_val3[['PRICE']]
 
-s1, s2 = learn(x, t)
+s1, s2, model = learn(x, t)
 print(s1, s2)
 
 # 多項式特徴量
 # 回帰分析では
 
-print(x['RM'] ** 2)
 x['RM2'] = x['RM'] ** 2
+x['LSTAT2'] = x['LSTAT'] ** 2
+x['PTRATIO2'] = x['PTRATIO'] ** 2
 
-print(x.head(2))
+# print(x.head(2))
+
+s1, s2, model = learn(x, t)
+print(s1, s2)
+
+x['RM * LSTAT'] = x['RM'] * x['LSTAT']
+
+s1, s2, model = learn(x, t)
+print(s1, s2)
+
+# 再学習
+sc_model_x2 = StandardScaler()
+sc_model_x2.fit(x)
+sc_x = sc_model_x2.transform(x)
+
+sc_model_y2 = StandardScaler()
+sc_model_y2.fit(t)
+sc_y = sc_model_y2.transform(t)
+model = LinearRegression()
+model.fit(sc_x, sc_y)
+print(model.score(sc_x, sc_y))
+
+# テストデータの前処理
+test2 = test.fillna(train_val.mean())
+x_test = test2.loc[:, feature_col]
+y_test = test2[['PRICE']]
+
+x_test['RM2'] = x_test['RM'] ** 2
+x_test['LSTAT2'] = x_test['LSTAT'] ** 2
+x_test['PTRATIO2'] = x_test['PTRATIO'] ** 2
+x_test['RM * LSTAT'] = x_test['RM'] * x_test['LSTAT']
+# 標準化
+sc_x_test = sc_model_x2.transform(x_test)
+sc_y_test = sc_model_y2.transform(y_test)
+print(model.score(sc_x_test, sc_y_test))
