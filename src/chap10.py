@@ -1,3 +1,4 @@
+from sklearn.covariance import MinCovDet
 import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.linear_model import LinearRegression
@@ -58,3 +59,51 @@ pred = model.predict(x)
 print(pred)
 iris_df.loc[condition, 'がく片長さ'] = pred
 print(iris_df[137:138])
+
+
+# マハラノビス距離 外れ値の計算
+# マハラノビス距離とはデータ分布の特徴を考慮した中心からの距離
+# 特徴を考慮しないとユーグリット距離
+
+df4 = df3.loc[:, 'atemp':'windspeed']
+df4 = df4.dropna()
+print(df4)
+mcd = MinCovDet(random_state=0, support_fraction=0.7)
+mcd.fit(df4)
+distance = mcd.mahalanobis(df4)
+print(distance)
+
+# 箱ひげ図 真ん中の箱は IQR/四分位範囲 25%で四分割の真ん中50%
+# 上下のヒゲは残り25%
+# このままだと外れ値が大きいので箱が見えない
+plt.boxplot(distance)
+image_path = f"./img/chap10-box.png"
+plt.savefig(image_path)
+plt.cla()
+
+# シリーズに変換しdescribe()で列データの平均や最大値など計算できる
+distance = pd.Series(distance)
+print(distance)
+tmp = distance.describe()
+print(tmp)
+
+# 外れ値の閾値
+# 大 75%の数値 + 1.5 * IQR
+# 小 25%の数値 - 1.5 * IQR
+# IRQの計算
+irq = tmp['75%'] - tmp['25%']
+print(irq)
+jougen = (1.5 * irq) + tmp['75%']
+kagen = tmp['25%'] - (1.5 * irq)
+print(jougen)
+print(kagen)
+
+# 外れ値
+outline = distance[(distance > jougen) | (distance < kagen)].index
+inline = distance.drop(distance.index[outline])
+print(outline)
+print(inline)
+plt.boxplot(inline)
+image_path = f"./img/chap10-box2.png"
+plt.savefig(image_path)
+plt.cla()
