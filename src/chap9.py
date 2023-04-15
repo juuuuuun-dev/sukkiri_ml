@@ -153,5 +153,5 @@ t = test['y']
 x = test2.drop(str_col, axis=1)
 x = x.drop(['id', 'y', 'day'], axis=1)
 
-# 0.81
+# 0.816 章ではここで終わり
 print(model_tree.score(x, t))
