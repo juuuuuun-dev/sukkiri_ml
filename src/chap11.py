@@ -1,3 +1,4 @@
+from sklearn.tree import DecisionTreeRegressor
 from sklearn.linear_model import Lasso
 from sklearn.linear_model import Ridge
 from sklearn.linear_model import LinearRegression
@@ -16,6 +17,7 @@ x = df.loc[:, x_col]
 
 print(t)
 
+# リッジ回帰 係数を小さくなるよう回帰式を作成
 # 標準化
 sc = StandardScaler()
 sc_x = sc.fit_transform(x)
@@ -56,3 +58,17 @@ print(model.score(x_test, y_test))
 weight = model.coef_
 s = pd.Series(weight, index=pf.get_feature_names_out())
 print(s)
+
+
+# 回帰木
+df = pd.read_csv("./sukkiri-ml-codes/datafiles/Boston.csv")
+df = df.fillna(df.mean())
+x = df.loc[:, 'ZN':'LSTAT']
+t = df['PRICE']
+
+x_train, x_test, y_train, y_test = train_test_split(
+    x, t, test_size=0.3, random_state=0)
+
+model = DecisionTreeRegressor(max_depth=10, random_state=0)
+model.fit(x_train, y_train)
+print(model.score(x_test, y_test))
