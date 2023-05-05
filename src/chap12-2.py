@@ -1,3 +1,5 @@
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import AdaBoostClassifier
 from sklearn import tree
 from sklearn.ensemble import RandomForestClassifier
 import pandas as pd
@@ -60,3 +62,24 @@ model2 = tree.DecisionTreeClassifier(random_state=0)
 model2.fit(x_train, y_train)
 print(model2.score(x_train, y_train))
 print(model2.score(x_test, y_test))
+
+
+# アンサンブル学習の二つ目、アダブースト
+# 逐次的に各モデルが一つづつ学習していき、前モデルの情報を踏まえて再学習していく
+# 予測するさいは各モデルの正解率に重みがついた票で多数決を行い、予測する
+
+
+x_train, x_test, y_train, y_test = train_test_split(
+    x, t, test_size=0.2, random_state=0)
+
+# アダブーストのベースモデル
+base_model = DecisionTreeClassifier(random_state=0, max_depth=5)
+# ベースモデルから500個逐次的作成
+ada_model = AdaBoostClassifier(
+    n_estimators=500,
+    random_state=0,
+    base_estimator=base_model)
+ada_model.fit(x_train, y_train)
+
+print(ada_model.score(x_train, y_train))
+print(ada_model.score(x_test, y_test))
